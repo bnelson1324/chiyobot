@@ -19,14 +19,14 @@ module.exports = {
 				.setDescription('Message to send with the ping')
 				.setRequired(false)),
 	async execute(interaction) {
-		const channel = await interaction.client.channels.fetch(interaction.channelId);
 		interaction.reply('User has been pinged');
 
 		let pingMessage = `<@${interaction.options.get('user').user.id}>`;
-		const userMessage = interaction.options.get('message').value;
+		const userMessage = interaction.options.get('message');
 		if (userMessage) {
-			pingMessage += ' ' + userMessage;
+			pingMessage += ' ' + userMessage.value;
 		}
+		const channel = await interaction.client.channels.fetch(interaction.channelId);
 		for (let i = 0; i < interaction.options.get('quantity').value; i++) {
 			await channel.send(pingMessage);
 		}
