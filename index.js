@@ -44,7 +44,11 @@ client.on('interactionCreate', async interaction => {
 	}
 
 	try {
-		await command.execute(interaction);
+		if (interaction.guild) {
+			await command.execute(interaction);
+		} else {
+			interaction.reply('Cannot use commands outside of a server');
+		}
 	} catch (error) {
 		console.error(error);
 		await interaction.reply({ content: 'There was an error executing this command', ephermal: true });

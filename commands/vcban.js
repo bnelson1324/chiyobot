@@ -42,23 +42,22 @@ module.exports = {
 	},
 	async execute(interaction) {
 		try {
-			const targetId = interaction.options.get('target').user.id;
+			const target = interaction.options.get('target');
 			if (interaction.options.get('ban').value) {
-				interaction.client.data.VCBan.findOrCreate({
+				await interaction.client.data.VCBan.findOrCreate({
 					where: {
 						guild: interaction.guildId,
-						user: targetId,
+						user: target.value,
 					},
 				});
 
 				// disconnect user from their current voice channel
-				const member = await interaction.guild.members.fetch(targetId);
-				member.voice.disconnect();
+				target.member.voice.disconnect();
 
-				await interaction.reply(`${interaction.options.get('target').user.username} has been banned from voice channels`);
+				interaction.reply(`${target.user.username} has been banned from voice channels`);
 			} else {
-				await interaction.client.data.VCBan.destroy({ where: { guild: interaction.guildId, user: targetId } });
-				await interaction.reply(`${interaction.options.get('target').user.username} has been unbanned from voice channels`);
+				await interaction.client.data.VCBan.destroy({ where: { guild: interaction.guildId, user: target.value } });
+				interaction.reply(`${target.user.username} has been unbanned from voice channels`);
 			}
 		} catch (error) {
 			console.error(error);

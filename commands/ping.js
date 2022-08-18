@@ -21,7 +21,7 @@ module.exports = {
 	async execute(interaction) {
 		interaction.reply('User has been pinged');
 
-		let pingMessage = `<@${interaction.options.get('target').user.id}>`;
+		let pingMessage = `<@${interaction.options.get('target').value}>`;
 		const userMessage = interaction.options.get('message');
 		if (userMessage) {
 			pingMessage += ' ' + userMessage.value;
