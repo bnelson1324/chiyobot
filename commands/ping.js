@@ -5,7 +5,7 @@ module.exports = {
 		.setName('ping')
 		.setDescription('Ping a user')
 		.addUserOption(option =>
-			option.setName('user')
+			option.setName('target')
 				.setDescription('User to ping')
 				.setRequired(true))
 		.addIntegerOption(option =>
@@ -21,14 +21,13 @@ module.exports = {
 	async execute(interaction) {
 		interaction.reply('User has been pinged');
 
-		let pingMessage = `<@${interaction.options.get('user').user.id}>`;
+		let pingMessage = `<@${interaction.options.get('target').user.id}>`;
 		const userMessage = interaction.options.get('message');
 		if (userMessage) {
 			pingMessage += ' ' + userMessage.value;
 		}
-		const channel = await interaction.client.channels.fetch(interaction.channelId);
 		for (let i = 0; i < interaction.options.get('quantity').value; i++) {
-			await channel.send(pingMessage);
+			await interaction.channel.send(pingMessage);
 		}
 	},
 };

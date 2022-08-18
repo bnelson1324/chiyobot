@@ -1,2 +1,4 @@
 This project uses:
-discord.js https://github.com/discordjs/discord.js/
+discord.js (Apache 2.0) https://github.com/discordjs/discord.js
+sqlite3 (BSD 3-clause) https://www.npmjs.com/package/sqlite3
+sequelize (MIT) https://www.npmjs.com/package/sequelize
