@@ -27,7 +27,6 @@ module.exports = {
 				allowNull: false,
 			},
 		});
-		await client.getModel('vcban').sync();
 
 		// set up voice channel event
 		client.on('voiceStateUpdate', async (oldState, newState) => {

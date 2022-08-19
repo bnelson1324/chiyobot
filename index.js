@@ -23,11 +23,14 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 commandFiles.forEach(file => {
 	const filePath = path.join(commandsPath, file);
 	const command = require(filePath);
-	client.commands[command.data.name] = command;
 	if (command.setup) {
 		command.setup(client);
 	}
+	client.commands[command.data.name] = command;
 });
+
+// sync all database models
+client.sequelize.sync();
 
 client.once('ready', () => {
 	console.log('Ready');
@@ -40,11 +43,9 @@ client.on('interactionCreate', async interaction => {
 	}
 
 	const command = client.commands[interaction.commandName];
-
 	if (!command) {
 		return;
 	}
-
 	try {
 		if (interaction.guild) {
 			await command.execute(interaction);
@@ -57,5 +58,5 @@ client.on('interactionCreate', async interaction => {
 	}
 });
 
-// log in
+// login
 client.login(token);
