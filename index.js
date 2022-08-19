@@ -12,9 +12,11 @@ client.sequelize = new Sequelize({
 	storage: 'database.sqlite',
 	logging: false,
 });
+client.getModel = function(modelName) {
+	return this.sequelize.models[modelName];
+};
 
 // set up commands
-client.data = {};
 client.commands = {};
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
