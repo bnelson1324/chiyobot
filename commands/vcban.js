@@ -30,8 +30,11 @@ module.exports = {
 
 		// set up voice channel event
 		client.on('voiceStateUpdate', async (oldState, newState) => {
-			const user = await newState.client.getModel('vcban').findOne({ where: { guild: newState.guild.id, user: newState.id } });
-			if (user) {
+			const member = await newState.client.getModel('vcban').findOne({
+				attributes: ['guild'],
+				where: { guild: newState.guild.id, user: newState.id },
+			});
+			if (member) {
 				newState.disconnect();
 				if (newState.channel != null) {
 					newState.member.send('YOU WILL DO NO SUCH THING');
