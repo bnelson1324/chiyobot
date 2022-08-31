@@ -43,26 +43,22 @@ module.exports = {
 		});
 	},
 	async execute(interaction) {
-		try {
-			const target = interaction.options.get('target');
-			if (interaction.options.get('ban').value) {
-				await interaction.client.getModel('vcban').findOrCreate({
-					where: {
-						guild: interaction.guildId,
-						user: target.value,
-					},
-				});
+		const target = interaction.options.get('target');
+		if (interaction.options.get('ban').value) {
+			await interaction.client.getModel('vcban').findOrCreate({
+				where: {
+					guild: interaction.guildId,
+					user: target.value,
+				},
+			});
 
-				// disconnect user from their current voice channel
-				target.member.voice.disconnect();
+			// disconnect user from their current voice channel
+			target.member.voice.disconnect();
 
-				interaction.reply(`${target.user.username} has been banned from voice channels`);
-			} else {
-				await interaction.client.getModel('vcban').destroy({ where: { guild: interaction.guildId, user: target.value } });
-				interaction.reply(`${target.user.username} has been unbanned from voice channels`);
-			}
-		} catch (error) {
-			console.error(error);
+			interaction.reply(`${target.user.username} has been banned from voice channels`);
+		} else {
+			await interaction.client.getModel('vcban').destroy({ where: { guild: interaction.guildId, user: target.value } });
+			interaction.reply(`${target.user.username} has been unbanned from voice channels`);
 		}
 	},
 };
