@@ -15,7 +15,7 @@ module.exports = {
 				.setRequired(true)),
 	async setup(client) {
 		// create database table
-		client.sequelize.define('vcbans', {
+		client.sequelize.define('vcban', {
 			guild: {
 				type: Sequelize.STRING,
 				primaryKey: true,
@@ -30,7 +30,7 @@ module.exports = {
 
 		// set up voice channel event
 		client.on('voiceStateUpdate', async (oldState, newState) => {
-			const member = await newState.client.getModel('vcbans').findOne({
+			const member = await newState.client.getModel('vcban').findOne({
 				attributes: ['guild'],
 				where: { guild: newState.guild.id, user: newState.id },
 			});
@@ -43,10 +43,10 @@ module.exports = {
 		});
 	},
 	async execute(interaction) {
-		const VCBans = await interaction.client.getModel('vcbans');
+		const VCBan = await interaction.client.getModel('vcban');
 		const target = interaction.options.get('target');
 		if (interaction.options.get('ban').value) {
-			await VCBans.findOrCreate({
+			await VCBan.findOrCreate({
 				where: {
 					guild: interaction.guildId,
 					user: target.value,
@@ -58,7 +58,7 @@ module.exports = {
 
 			interaction.reply(`${target.user.username} has been banned from voice channels`);
 		} else {
-			await VCBans.destroy({ where: { guild: interaction.guildId, user: target.value } });
+			await VCBan.destroy({ where: { guild: interaction.guildId, user: target.value } });
 			interaction.reply(`${target.user.username} has been unbanned from voice channels`);
 		}
 	},
