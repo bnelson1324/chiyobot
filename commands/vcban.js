@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const Sequelize = require('sequelize');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -14,26 +13,14 @@ module.exports = {
 				.setDescription('Whether to ban or unban the user')
 				.setRequired(true)),
 	async setup(client) {
-		// create database table
-		client.sequelize.define('vcban', {
-			guild: {
-				type: Sequelize.STRING,
-				primaryKey: true,
-				allowNull: false,
-			},
-			user: {
-				type: Sequelize.STRING,
-				primaryKey: true,
-				allowNull: false,
-			},
-		});
-
 		// set up voice channel event
 		client.on('voiceStateUpdate', async (oldState, newState) => {
-			const member = await newState.client.getModel('vcban').findOne({
-				attributes: ['guild'],
-				where: { guild: newState.guild.id, user: newState.id },
-			});
+			const member = await newState.client.db.get(`
+				SELECT guild
+				FROM vcbans
+				WHERE guild=(?) AND user=(?);
+				`, newState.guild.id, newState.id,
+			);
 			if (member) {
 				newState.disconnect();
 				if (newState.channel != null) {
@@ -43,22 +30,24 @@ module.exports = {
 		});
 	},
 	async execute(interaction) {
-		const VCBan = await interaction.client.getModel('vcban');
 		const target = interaction.options.get('target');
 		if (interaction.options.get('ban').value) {
-			await VCBan.findOrCreate({
-				where: {
-					guild: interaction.guildId,
-					user: target.value,
-				},
-			});
+			await interaction.client.db.run(`
+				INSERT OR IGNORE INTO vcbans
+				VALUES (?, ?)
+				`, interaction.guildId, target.value,
+			);
 
 			// disconnect user from their current voice channel
 			target.member.voice.disconnect();
 
 			interaction.reply(`${target.user.username} has been banned from voice channels`);
 		} else {
-			await VCBan.destroy({ where: { guild: interaction.guildId, user: target.value } });
+			await interaction.client.db.run(`
+				DELETE FROM vcbans
+				WHERE guild=(?) AND user=(?);
+				`, interaction.guildId, target.value,
+			);
 			interaction.reply(`${target.user.username} has been unbanned from voice channels`);
 		}
 	},
