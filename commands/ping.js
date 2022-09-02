@@ -30,4 +30,6 @@ module.exports = {
 			await interaction.channel.send(pingMessage);
 		}
 	},
+	allowedInGuilds: true,
+	allowedInDMs: false,
 };

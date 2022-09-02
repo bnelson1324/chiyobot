@@ -6,7 +6,6 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 
-
 (async () => {
 	// set up database
 	client.db = await open({
@@ -15,6 +14,7 @@ const { open } = require('sqlite');
 	});
 	const schema = fs.readFileSync('sql/schema.sql', 'utf8');
 	await client.db.exec(schema);
+	console.log('Database loaded');
 
 	// set up commands
 	client.commands = {};
@@ -44,10 +44,16 @@ const { open } = require('sqlite');
 			return;
 		}
 		try {
-			if (interaction.guild) {
+			const inGuild = interaction.guild != null;
+			const canUse = inGuild == command.allowedInGuilds || inGuild != command.allowedInDMs;
+			if (canUse) {
 				await command.execute(interaction);
 			} else {
-				interaction.reply('Cannot use commands outside of a server');
+				if (!inGuild) {
+					interaction.reply('Must use this command in a server');
+				} else {
+					interaction.replied('Must use this command in DMs');
+				}
 			}
 		} catch (error) {
 			console.error(error);

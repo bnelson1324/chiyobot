@@ -54,4 +54,6 @@ module.exports = {
 			interaction.reply(`${target.user.username} has been unbanned from voice channels`);
 		}
 	},
+	allowedInGuilds: true,
+	allowedInDMs: false,
 };
