@@ -18,7 +18,7 @@ module.exports = {
 			const member = await newState.client.db.get(`
 				SELECT guild
 				FROM vcbans
-				WHERE guild=(?) AND user=(?);
+				WHERE guild = ? AND user = ?;
 				`, newState.guild.id, newState.id,
 			);
 			if (member) {
@@ -32,10 +32,13 @@ module.exports = {
 	async execute(interaction) {
 		const target = interaction.options.get('target');
 		if (interaction.options.get('ban').value) {
-			await interaction.client.db.run(`
-				INSERT OR IGNORE INTO vcbans
-				VALUES (?, ?)
-				`, interaction.guildId, target.value,
+			await interaction.client.db.run(
+				'INSERT OR IGNORE INTO members VALUES (?, ?);',
+				interaction.guildId, target.value,
+			);
+			await interaction.client.db.run(
+				'INSERT OR IGNORE INTO vcbans VALUES (?, ?);',
+				interaction.guildId, target.value,
 			);
 
 			// disconnect user from their current voice channel
@@ -45,7 +48,7 @@ module.exports = {
 		} else {
 			await interaction.client.db.run(`
 				DELETE FROM vcbans
-				WHERE guild=(?) AND user=(?);
+				WHERE guild = ? AND user = ?;
 				`, interaction.guildId, target.value,
 			);
 			interaction.reply(`${target.user.username} has been unbanned from voice channels`);
