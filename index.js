@@ -5,6 +5,7 @@ const { token } = require('./config.json');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
+const perms = require('./commands/manageperms');
 
 (async () => {
 	// set up database
@@ -39,21 +40,22 @@ const { open } = require('sqlite');
 			return;
 		}
 
+		// check if command exists and member has permissions
 		const command = client.commands[interaction.commandName];
 		if (!command) {
 			return;
 		}
+		if (!await perms.hasPerms(client.db, interaction.member, interaction.guild)) {
+			interaction.reply({ files: ['res/command reject.png'] });
+			return;
+		}
+
 		try {
 			const inGuild = interaction.guild != null;
-			const canUse = inGuild == command.allowedInGuilds || inGuild != command.allowedInDMs;
-			if (canUse) {
-				await command.execute(interaction);
+			if (inGuild == command.allowedInGuilds) {
+				command.execute(interaction);
 			} else {
-				if (!inGuild) {
-					interaction.reply('Must use this command in a server');
-				} else {
-					interaction.replied('Must use this command in DMs');
-				}
+				interaction.reply('Must use this command in DMs');
 			}
 		} catch (error) {
 			console.error(error);

@@ -4,6 +4,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('vcban')
 		.setDescription('Ban a user from voice channels')
+		.setDMPermission(false)
 		.addUserOption(option =>
 			option.setName('target')
 				.setDescription('Target to ban')
@@ -55,5 +56,4 @@ module.exports = {
 		}
 	},
 	allowedInGuilds: true,
-	allowedInDMs: false,
 };
