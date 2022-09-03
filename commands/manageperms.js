@@ -94,10 +94,9 @@ async function hasPerms(db, member, guild) {
 			return true;
 		}
 	} else {
+		// if no required role set for the server, return true
 		return true;
 	}
-
-	return false;
 }
 
 // check if a member is owner of the guild
