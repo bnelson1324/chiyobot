@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS members
 	PRIMARY KEY (guild, user)
 );
 
--- /perms
+-- /manageperms
 CREATE TABLE IF NOT EXISTS requiredRoles
 (
 	guild text,

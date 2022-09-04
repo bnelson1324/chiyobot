@@ -14,7 +14,7 @@ const resourceManager = require('./res/resourceManager');
 		filename: 'database.sqlite',
 		driver: sqlite3.Database,
 	});
-	const schema = fs.readFileSync('sql/schema.sql', 'utf8');
+	const schema = fs.readFileSync('schema.sql', 'utf8');
 	await client.db.exec(schema);
 	console.log('Database loaded');
 
