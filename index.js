@@ -6,6 +6,7 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const perms = require('./commands/manageperms');
+const resourceManager = require('./res/resourceManager');
 
 (async () => {
 	// set up database
@@ -46,7 +47,7 @@ const perms = require('./commands/manageperms');
 			return;
 		}
 		if (!await perms.hasPerms(client.db, interaction.member, interaction.guild)) {
-			interaction.reply({ files: ['res/command reject.png'] });
+			interaction.reply({ files: [resourceManager.getRandSpeechBubble()] });
 			return;
 		}
 

@@ -90,7 +90,6 @@ async function hasPerms(db, member, guild) {
 	));
 	if (requiredRoleRow) {
 		if (member.roles.cache.has(requiredRoleRow.requiredRole)) {
-			console.log('user has role');
 			return true;
 		}
 	} else {
