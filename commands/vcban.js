@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const resourceManager = require('../res/resourceManager');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -25,7 +26,7 @@ module.exports = {
 			if (member) {
 				newState.disconnect();
 				if (newState.channel != null) {
-					newState.member.send('YOU WILL DO NO SUCH THING');
+					newState.member.send({ files: [resourceManager.getPenguinImage()] });
 				}
 			}
 		});
