@@ -6,8 +6,7 @@ module.exports = {
 		.setName('status')
 		.setDescription('Check your status with Chiyo on all guilds'),
 	async execute(interaction) {
-		// select all entries from vctable where member is the same as the userinteraction.user.id
-		let statusText = 'Status in guilds:\n\n';
+		let statusText = '';
 		const statusRows = await interaction.client.db.all(`
 		SELECT members.guild, blockedMembers.guild AS blockedGuild, vcbans.guild AS vcbanGuild
 		FROM members
@@ -24,7 +23,13 @@ module.exports = {
 			statusText += await formatGuildStatus(row, interaction.client, interaction.user.id) + '\n';
 		}
 
-		interaction.reply(statusText);
+		// send status in DMs
+		if (interaction.guild == null) {
+			interaction.reply('Status in guilds:\n\n' + statusText);
+		} else {
+			await interaction.user.send('Status in guild: ' + statusText);
+			interaction.reply('Status sent');
+		}
 	},
 	allowedInGuilds: true,
 };

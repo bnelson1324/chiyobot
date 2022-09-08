@@ -96,7 +96,7 @@ async function hasPerms(db, member, guild) {
 	if (requiredRoleRow) {
 		return member.roles.cache.has(requiredRoleRow.requiredRole);
 	} else {
-		// if no required role set for the server, return true
+		// if no required role set for the guild, return true
 		return true;
 	}
 }

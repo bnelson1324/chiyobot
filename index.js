@@ -46,7 +46,7 @@ const resourceManager = require('./res/resourceManager');
 		if (!command) {
 			return;
 		}
-		// check if member is in a server and doesn't have perms
+		// check if member is in a guild and doesn't have perms
 		if (interaction.guild != null && await !perms.hasPerms(client.db, interaction.member, interaction)) {
 			interaction.reply({ files: [resourceManager.getRandSpeechBubble()] });
 			return;
