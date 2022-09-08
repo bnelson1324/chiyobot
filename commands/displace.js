@@ -14,7 +14,7 @@ module.exports = {
 				.setDescription('Number seconds to displace user for	')
 				.setMinValue(1)
 				.setMaxValue(10)
-				.setRequired(false)),
+				.setRequired(true)),
 	async execute(interaction) {
 		const targetVoiceState = interaction.options.get('target').member.voice;
 		if (!targetVoiceState.channel) {

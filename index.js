@@ -41,19 +41,20 @@ const resourceManager = require('./res/resourceManager');
 			return;
 		}
 
-		// check if command exists and member has permissions
+		// check if command doesn't exist
 		const command = client.commands[interaction.commandName];
 		if (!command) {
 			return;
 		}
-		if (!await perms.hasPerms(client.db, interaction.member, interaction.guild)) {
+		// check if member is in a server and doesn't have perms
+		if (interaction.guild != null && await !perms.hasPerms(client.db, interaction.member, interaction)) {
 			interaction.reply({ files: [resourceManager.getRandSpeechBubble()] });
 			return;
 		}
 
 		try {
 			const inGuild = interaction.guild != null;
-			if (inGuild == command.allowedInGuilds) {
+			if (!inGuild || (inGuild && command.allowedInGuilds)) {
 				command.execute(interaction);
 			} else {
 				interaction.reply('Must use this command in DMs');

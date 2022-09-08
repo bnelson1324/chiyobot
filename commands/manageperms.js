@@ -38,13 +38,18 @@ module.exports = {
 			}
 			case 'blockuser': {
 				const target = interaction.options.get('target');
+				const targetMember = await interaction.guild.members.fetch(target);
+				if (await isOwner(targetMember, interaction.guild)) {
+					interaction.reply('Cannot use this command on guild owner');
+					return;
+				}
 				if (interaction.options.get('block').value) {
 					await interaction.client.db.run(
-						'INSERT OR IGNORE INTO blockedMembers VALUES (?, ?);',
+						'INSERT OR IGNORE INTO blockedMembers (guild, user) VALUES (?, ?);',
 						interaction.guildId, target.value,
 					);
 					await interaction.client.db.run(
-						'INSERT OR IGNORE INTO blockedMembers VALUES (?, ?);',
+						'INSERT OR IGNORE INTO blockedMembers (guild, user) VALUES (?, ?);',
 						interaction.guildId, target.value,
 					);
 					interaction.reply(`${target.user.username} has been blocked from using Chiyo`);
@@ -75,7 +80,7 @@ async function hasPerms(db, member, guild) {
 		SELECT guild
 		FROM blockedMembers
 		WHERE guild = ? AND user = ?
-		`, member.guild.id, member.id,
+		`, guild.id, member.id,
 	)) != null;
 	if (isBlocked) {
 		return false;
@@ -86,12 +91,10 @@ async function hasPerms(db, member, guild) {
 		SELECT requiredRole
 		FROM requiredRoles
 		WHERE guild = ?
-		`, member.guild.id,
+		`, guild.id,
 	));
 	if (requiredRoleRow) {
-		if (member.roles.cache.has(requiredRoleRow.requiredRole)) {
-			return true;
-		}
+		return member.roles.cache.has(requiredRoleRow.requiredRole);
 	} else {
 		// if no required role set for the server, return true
 		return true;
@@ -100,24 +103,24 @@ async function hasPerms(db, member, guild) {
 
 // check if a member is owner of the guild
 function isOwner(member, guild) {
-	return member.id == guild.ownerId;
+	return member.id === guild.ownerId;
 }
 
 async function updateOrInsertRole(db, interaction, role) {
 	await db.run(
-		'INSERT OR IGNORE INTO members VALUES (?, ?);',
+		'INSERT OR IGNORE INTO members (guild, user) VALUES (?, ?);',
 		interaction.guildId, interaction.user.id,
 	);
 	// update requiredRole if it exists, else insert
 	const roleExists = await db.get(`
 		SELECT requiredRole
 		FROM requiredRoles
-		WHERE guild = ? AND requiredRole = ?;
-		`, interaction.guildId, role.id,
+		WHERE guild = ?;
+		`, interaction.guildId,
 	) != undefined;
-	if (roleExists) {
+	if (!roleExists) {
 		await db.run(`
-			INSERT OR IGNORE INTO requiredRoles
+			INSERT OR IGNORE INTO requiredRoles (guild, requiredRole)
 			VALUES (?, ?);
 			`, interaction.guildId, role.id,
 		);

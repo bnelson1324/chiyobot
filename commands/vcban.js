@@ -35,11 +35,11 @@ module.exports = {
 		const target = interaction.options.get('target');
 		if (interaction.options.get('ban').value) {
 			await interaction.client.db.run(
-				'INSERT OR IGNORE INTO members VALUES (?, ?);',
+				'INSERT OR IGNORE INTO members (guild, user) VALUES (?, ?);',
 				interaction.guildId, target.value,
 			);
 			await interaction.client.db.run(
-				'INSERT OR IGNORE INTO vcbans VALUES (?, ?);',
+				'INSERT OR IGNORE INTO vcbans (guild, user) VALUES (?, ?);',
 				interaction.guildId, target.value,
 			);
 
