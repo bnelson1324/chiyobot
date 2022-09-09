@@ -8,6 +8,7 @@ const { open } = require('sqlite');
 const perms = require('./commands/manageperms');
 const commandHistory = require('./commands/commandhistory');
 const resourceManager = require('./res/resourceManager');
+const insertOrIgnoreMember = require('./sql/utils').insertOrIgnoreMember;
 
 (async () => {
 	// set up database
@@ -57,6 +58,9 @@ const resourceManager = require('./res/resourceManager');
 		try {
 			const inGuild = interaction.guild != null;
 			if (!inGuild || (inGuild && command.allowedInGuilds)) {
+				// add command user to database
+				await insertOrIgnoreMember(interaction.client.db, interaction.guildId, interaction.user.id);
+				// execute command
 				await command.execute(interaction);
 			} else {
 				await interaction.reply('Must use this command in DMs');

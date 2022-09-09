@@ -20,7 +20,6 @@ module.exports = {
 };
 
 async function addCommandInstance(interaction) {
-	await insertOrIgnoreMember(interaction.client.db, interaction.guildId, interaction.user.id);
 	await interaction.client.db.run(`
 		INSERT INTO commandHistory (guildId, userId, timestamp, commandName, commandParameters)
 		VALUES (?, ?, UNIXEPOCH(), ?, ?);

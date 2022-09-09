@@ -116,7 +116,6 @@ async function updateOrInsertRole(interaction, role) {
 		`, interaction.guildId,
 	) != undefined;
 	if (!roleExists) {
-		await insertOrIgnoreMember(db, interaction.guildId, interaction.user.id);
 		await db.run(`
 			INSERT OR IGNORE INTO requiredRoles (guild, requiredRole)
 			VALUES (?, ?);
