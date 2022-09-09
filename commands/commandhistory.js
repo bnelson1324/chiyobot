@@ -10,9 +10,9 @@ module.exports = {
 		const commandHistory = await interaction.client.db.all(`
 			SELECT * FROM commandHistory
 			WHERE guildId = ?
-			ORDER BY timestamp ASC;
+			ORDER BY timestamp DESC;
 		`, interaction.guildId);
-		console.log(commandHistory); // temp
+		console.log(commandHistory);
 		await interaction.reply('command history printed to console');
 	},
 	allowedInGuilds: true,
