@@ -14,7 +14,7 @@ module.exports = {
 			ON members.user = blockedMembers.user AND members.guild = blockedMembers.guild
 		LEFT JOIN vcbans
 			ON members.user = vcbans.user AND members.guild = vcbans.guild
-		WHERE members.user = $userId AND ($guildId IS NULL OR members.guild = $guildId) ;
+		WHERE members.user = $userId AND ($guildId IS NULL OR members.guild = $guildId);
 		`, {
 			$guildId: interaction.guildId,
 			$userId: interaction.user.id,
@@ -38,7 +38,7 @@ async function formatGuildStatus(row, client, userId) {
 	const guild = await client.guilds.fetch(row.guild);
 	const member = await guild.members.fetch(userId);
 	let statusText = guild.name + '\n';
-	statusText = addToStatusText(await perms.hasPerms(client.db, member, guild), 'has perms', 'do not have perms', statusText);
+	statusText = addToStatusText(await perms.hasPerms(client.db, member, guild), 'have perms', 'do not have perms', statusText);
 	statusText = addToStatusText(row.blockedGuild != null, 'blocked', null, statusText);
 	statusText = addToStatusText(row.vcbanGuild != null, 'banned from voice channels', null, statusText);
 	return statusText;

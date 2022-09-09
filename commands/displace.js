@@ -18,7 +18,7 @@ module.exports = {
 	async execute(interaction) {
 		const targetVoiceState = interaction.options.get('target').member.voice;
 		if (!targetVoiceState.channel) {
-			interaction.reply('User is not currently in a voice channel');
+			await interaction.reply('User is not currently in a voice channel');
 			return;
 		}
 		const vcChannels = interaction.guild.channels.cache.filter(channel => channel.type == 'GUILD_VOICE');

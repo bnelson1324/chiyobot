@@ -6,6 +6,7 @@ const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
 const perms = require('./commands/manageperms');
+const commandHistory = require('./commands/commandhistory');
 const resourceManager = require('./res/resourceManager');
 
 (async () => {
@@ -14,7 +15,7 @@ const resourceManager = require('./res/resourceManager');
 		filename: 'database.sqlite',
 		driver: sqlite3.Database,
 	});
-	const schema = fs.readFileSync('schema.sql', 'utf8');
+	const schema = fs.readFileSync('sql/schema.sql', 'utf8');
 	await client.db.exec(schema);
 	console.log('Database loaded');
 
@@ -47,21 +48,29 @@ const resourceManager = require('./res/resourceManager');
 			return;
 		}
 		// check if member is in a guild and doesn't have perms
-		if (interaction.guild != null && await !perms.hasPerms(client.db, interaction.member, interaction)) {
-			interaction.reply({ files: [resourceManager.getRandSpeechBubble()] });
+		if (interaction.guild != null && !(await perms.hasPerms(client.db, interaction.member, interaction.guild))) {
+			await interaction.reply({ files: [resourceManager.getRandSpeechBubble()] });
 			return;
 		}
 
+		// execute command
 		try {
 			const inGuild = interaction.guild != null;
 			if (!inGuild || (inGuild && command.allowedInGuilds)) {
-				command.execute(interaction);
+				await command.execute(interaction);
 			} else {
-				interaction.reply('Must use this command in DMs');
+				await interaction.reply('Must use this command in DMs');
 			}
 		} catch (error) {
 			console.error(error);
 			await interaction.reply({ content: 'There was an error executing this command', ephermal: true });
+		}
+		return; // temp
+		// add command to commandHistory
+		try {
+			await commandHistory.addCommandInstance(interaction);
+		} catch (error) {
+			console.error(error);
 		}
 	});
 

@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const insertOrIgnoreMember = require('../sql/utils').insertOrIgnoreMember;
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -25,42 +26,41 @@ module.exports = {
 						.setRequired(true))),
 	async execute(interaction) {
 		if (!isOwner(interaction.member, interaction.guild)) {
-			interaction.reply('Only the guild owner can use this command');
+			await interaction.reply('Only the guild owner can use this command');
 			return;
 		}
 
 		switch (interaction.options.getSubcommand()) {
 			case 'requirerole': {
 				const role = interaction.options.get('requiredrole').role;
-				await updateOrInsertRole(interaction.client.db, interaction, role);
-				interaction.reply(`Required role set to: ${role.name}`);
+				await updateOrInsertRole(interaction, role);
+				await interaction.reply(`Required role set to: ${role.name}`);
 				break;
 			}
 			case 'blockuser': {
 				const target = interaction.options.get('target');
-				const targetMember = await interaction.guild.members.fetch(target);
-				if (await isOwner(targetMember, interaction.guild)) {
-					interaction.reply('Cannot use this command on guild owner');
+				if (await isOwner(target.member, interaction.guild)) {
+					await interaction.reply('Cannot use this command on guild owner');
 					return;
 				}
+				const db = interaction.client.db;
+				let replyText = target.member.displayName;
 				if (interaction.options.get('block').value) {
-					await interaction.client.db.run(
+					await insertOrIgnoreMember(db, interaction.guildId, target.value);
+					await db.run(
 						'INSERT OR IGNORE INTO blockedMembers (guild, user) VALUES (?, ?);',
 						interaction.guildId, target.value,
 					);
-					await interaction.client.db.run(
-						'INSERT OR IGNORE INTO blockedMembers (guild, user) VALUES (?, ?);',
-						interaction.guildId, target.value,
-					);
-					interaction.reply(`${target.user.username} has been blocked from using Chiyo`);
+					replyText += ' has been blocked from using Chiyo';
 				} else {
-					await interaction.client.db.run(`
+					await db.run(`
 						DELETE FROM blockedMembers
 						WHERE guild = ? AND user = ?;
 						`, interaction.guildId, target.value,
 					);
-					interaction.reply(`${target.user.username} has been unblocked from using Chiyo`);
+					replyText += ' has been unblocked from using Chiyo';
 				}
+				await interaction.reply(replyText);
 				break;
 			}
 		}
@@ -106,11 +106,8 @@ function isOwner(member, guild) {
 	return member.id === guild.ownerId;
 }
 
-async function updateOrInsertRole(db, interaction, role) {
-	await db.run(
-		'INSERT OR IGNORE INTO members (guild, user) VALUES (?, ?);',
-		interaction.guildId, interaction.user.id,
-	);
+async function updateOrInsertRole(interaction, role) {
+	const db = interaction.client.db;
 	// update requiredRole if it exists, else insert
 	const roleExists = await db.get(`
 		SELECT requiredRole
@@ -119,6 +116,7 @@ async function updateOrInsertRole(db, interaction, role) {
 		`, interaction.guildId,
 	) != undefined;
 	if (!roleExists) {
+		await insertOrIgnoreMember(db, interaction.guildId, interaction.user.id);
 		await db.run(`
 			INSERT OR IGNORE INTO requiredRoles (guild, requiredRole)
 			VALUES (?, ?);
