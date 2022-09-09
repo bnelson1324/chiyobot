@@ -1,9 +1,12 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
+const resourceManager = require('../res/resourceManager');
+const insertOrIgnoreMember = require('../sql/utils').insertOrIgnoreMember;
 
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('vcban')
 		.setDescription('Ban a user from voice channels')
+		.setDMPermission(false)
 		.addUserOption(option =>
 			option.setName('target')
 				.setDescription('Target to ban')
@@ -18,37 +21,40 @@ module.exports = {
 			const member = await newState.client.db.get(`
 				SELECT guild
 				FROM vcbans
-				WHERE guild=(?) AND user=(?);
+				WHERE guild = ? AND user = ?;
 				`, newState.guild.id, newState.id,
 			);
 			if (member) {
 				newState.disconnect();
 				if (newState.channel != null) {
-					newState.member.send('YOU WILL DO NO SUCH THING');
+					newState.member.send({ files: [resourceManager.getPenguinImage()] });
 				}
 			}
 		});
 	},
 	async execute(interaction) {
 		const target = interaction.options.get('target');
+		let replyText = target.member.displayName;
 		if (interaction.options.get('ban').value) {
-			await interaction.client.db.run(`
-				INSERT OR IGNORE INTO vcbans
-				VALUES (?, ?)
-				`, interaction.guildId, target.value,
+			await insertOrIgnoreMember(interaction.client.db, interaction.guildId, target.value);
+			await interaction.client.db.run(
+				'INSERT OR IGNORE INTO vcbans (guild, user) VALUES (?, ?);',
+				interaction.guildId, target.value,
 			);
 
 			// disconnect user from their current voice channel
-			target.member.voice.disconnect();
+			await target.member.voice.disconnect();
 
-			interaction.reply(`${target.user.username} has been banned from voice channels`);
+			replyText += ' has been banned from voice channels';
 		} else {
 			await interaction.client.db.run(`
 				DELETE FROM vcbans
-				WHERE guild=(?) AND user=(?);
+				WHERE guild = ? AND user = ?;
 				`, interaction.guildId, target.value,
 			);
-			interaction.reply(`${target.user.username} has been unbanned from voice channels`);
+			replyText += ' has been unbanned from voice channels';
 		}
+		await interaction.reply(replyText);
 	},
+	allowedInGuilds: true,
 };

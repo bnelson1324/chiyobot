@@ -5,7 +5,9 @@ const { token } = require('./config.json');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });
 const sqlite3 = require('sqlite3');
 const { open } = require('sqlite');
-
+const perms = require('./commands/manageperms');
+const commandHistory = require('./commands/commandhistory');
+const resourceManager = require('./res/resourceManager');
 
 (async () => {
 	// set up database
@@ -15,6 +17,7 @@ const { open } = require('sqlite');
 	});
 	const schema = fs.readFileSync('sql/schema.sql', 'utf8');
 	await client.db.exec(schema);
+	console.log('Database loaded');
 
 	// set up commands
 	client.commands = {};
@@ -39,19 +42,35 @@ const { open } = require('sqlite');
 			return;
 		}
 
+		// check if command doesn't exist
 		const command = client.commands[interaction.commandName];
 		if (!command) {
 			return;
 		}
+		// check if member is in a guild and doesn't have perms
+		if (interaction.guild != null && !(await perms.hasPerms(client.db, interaction.member, interaction.guild))) {
+			await interaction.reply({ files: [resourceManager.getRandSpeechBubble()] });
+			return;
+		}
+
+		// execute command
 		try {
-			if (interaction.guild) {
+			const inGuild = interaction.guild != null;
+			if (!inGuild || (inGuild && command.allowedInGuilds)) {
 				await command.execute(interaction);
 			} else {
-				interaction.reply('Cannot use commands outside of a server');
+				await interaction.reply('Must use this command in DMs');
 			}
 		} catch (error) {
 			console.error(error);
 			await interaction.reply({ content: 'There was an error executing this command', ephermal: true });
+		}
+		return; // temp
+		// add command to commandHistory
+		try {
+			await commandHistory.addCommandInstance(interaction);
+		} catch (error) {
+			console.error(error);
 		}
 	});
 

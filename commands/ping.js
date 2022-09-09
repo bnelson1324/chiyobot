@@ -4,6 +4,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('ping')
 		.setDescription('Ping a user')
+		.setDMPermission(false)
 		.addUserOption(option =>
 			option.setName('target')
 				.setDescription('User to ping')
@@ -30,4 +31,5 @@ module.exports = {
 			await interaction.channel.send(pingMessage);
 		}
 	},
+	allowedInGuilds: true,
 };
