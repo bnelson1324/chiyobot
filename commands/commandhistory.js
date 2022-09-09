@@ -20,8 +20,12 @@ module.exports = {
 };
 
 async function addCommandInstance(interaction) {
+	const commandOptions = {};
+	for (const opt of interaction.options._hoistedOptions) {
+		commandOptions[opt.name] = opt.value;
+	}
 	await interaction.client.db.run(`
 		INSERT INTO commandHistory (guildId, userId, timestamp, commandName, commandParameters)
 		VALUES (?, ?, UNIXEPOCH(), ?, ?);
-	`, interaction.guildId, interaction.user.id, interaction.commandName, interaction.options);
+	`, interaction.guildId, interaction.user.id, interaction.commandName, JSON.stringify(commandOptions));
 }
