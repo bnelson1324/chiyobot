@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS commandHistory
 	userId TEXT NOT NULL,
 	timestamp INTEGER NOT NULL,
 	commandName TEXT NOT NULL,
-	commandParameters TEXT,
+	commandParameters TEXT, --command options as JSON
 	FOREIGN KEY (guildId, userId) REFERENCES members (guild, user)
 );
 

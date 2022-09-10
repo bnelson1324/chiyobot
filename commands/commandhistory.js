@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const insertOrIgnoreMember = require('../sql/utils').insertOrIgnoreMember;
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -20,12 +19,22 @@ module.exports = {
 };
 
 async function addCommandInstance(interaction) {
+	// get command name, with subcommand
+	let commandName = interaction.commandName;
+	const subCommandName = interaction.options._subcommand;
+	if (subCommandName) {
+		commandName += ` ${subCommandName}`;
+	}
+
+	// get parameters of command
 	const commandOptions = {};
 	for (const opt of interaction.options._hoistedOptions) {
 		commandOptions[opt.name] = opt.value;
 	}
+
+	// insert into db
 	await interaction.client.db.run(`
 		INSERT INTO commandHistory (guildId, userId, timestamp, commandName, commandParameters)
 		VALUES (?, ?, UNIXEPOCH(), ?, ?);
-	`, interaction.guildId, interaction.user.id, interaction.commandName, JSON.stringify(commandOptions));
+	`, interaction.guildId, interaction.user.id, commandName, JSON.stringify(commandOptions));
 }
