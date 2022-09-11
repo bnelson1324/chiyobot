@@ -8,26 +8,35 @@ module.exports = {
 	async execute(interaction) {
 		let statusText = '';
 		const statusRows = await interaction.client.db.all(`
-		SELECT members.guild, blockedMembers.guild AS blockedGuild, vcbans.guild AS vcbanGuild
-		FROM members
-		LEFT JOIN blockedMembers
-			ON members.user = blockedMembers.user AND members.guild = blockedMembers.guild
-		LEFT JOIN vcbans
-			ON members.user = vcbans.user AND members.guild = vcbans.guild
-		WHERE members.user = $userId AND ($guildId IS NULL OR members.guild = $guildId);
+			SELECT guilds.id AS guild, blockedMembers.guild AS blockedGuild, vcbans.guild AS vcbanGuild
+			FROM guilds
+			LEFT JOIN users
+			LEFT JOIN blockedMembers
+				ON users.id = blockedMembers.user AND guilds.id = blockedMembers.guild
+			LEFT JOIN vcbans
+				ON users.id = vcbans.user AND guilds.id = vcbans.guild
+			WHERE users.id = $userId AND ($guildId IS NULL OR guilds.id = $guildId);
 		`, {
 			$guildId: interaction.guildId,
 			$userId: interaction.user.id,
 		});
+
+		// if no information on user or guild exists
+		if (statusRows.length === 0) {
+			await interaction.reply('Information about user or guild not stored in database');
+			return;
+		}
+
+		// format reply
 		for (const row of statusRows) {
 			statusText += await formatGuildStatus(row, interaction.client, interaction.user.id) + '\n';
 		}
 
 		// send status in DMs
 		if (interaction.guild == null) {
-			interaction.reply('Status in guilds:\n\n' + statusText);
+			interaction.reply(`Status in guilds:\n\n ${statusText}`);
 		} else {
-			await interaction.user.send('Status in guild: ' + statusText);
+			await interaction.user.send(`Status in guild: ${statusText}`);
 			interaction.reply('Status sent');
 		}
 	},
