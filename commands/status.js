@@ -6,7 +6,6 @@ module.exports = {
 		.setName('status')
 		.setDescription('Check your status with Chiyo on all guilds'),
 	async execute(interaction) {
-		let statusText = '';
 		const statusRows = await interaction.client.db.all(`
 			SELECT guilds.id AS guild, blockedMembers.guild AS blockedGuild, vcbans.guild AS vcbanGuild
 			FROM guilds
@@ -28,8 +27,9 @@ module.exports = {
 		}
 
 		// format reply
+		let statusText = '';
 		for (const row of statusRows) {
-			statusText += await formatGuildStatus(row, interaction.client, interaction.user.id) + '\n';
+			statusText += await formatGuildStatusRow(row, interaction.client, interaction.user.id) + '\n';
 		}
 
 		// send status in DMs
@@ -43,7 +43,7 @@ module.exports = {
 	allowedInGuilds: true,
 };
 
-async function formatGuildStatus(row, client, userId) {
+async function formatGuildStatusRow(row, client, userId) {
 	const guild = await client.guilds.fetch(row.guild);
 	const member = await guild.members.fetch(userId);
 	let statusText = guild.name + '\n';

@@ -29,14 +29,38 @@ module.exports = {
 			`, timezoneOffset, interaction.guildId,
 		);
 
+		// format timezone
+		let timezoneText = 'UTC';
+		if (timezoneOffset >= 0) {
+			timezoneText += `+${timezoneOffset}`;
+		} else {
+			timezoneText += `${timezoneOffset}`;
+		}
 		// format reply
-		let historyText = interaction.guild.name + '\n';
+		let historyText = interaction.guild.name + '\n\n';
+		for (const row of commandHistory) {
+			historyText += await formatCommandHistoryRow(row, interaction.client, timezoneText) + '\n';
+		}
+
+		// send command history in DMs
 		await interaction.user.send(`Command history in guild: ${historyText}`);
 		await interaction.reply('Command history sent');
 	},
 	allowedInGuilds: true,
 	addCommandInstance,
 };
+
+async function formatCommandHistoryRow(row, client, timezoneText) {
+	const guild = await client.guilds.fetch(row.guildId);
+	const member = await guild.members.fetch(row.userId);
+	const chText =
+	`**${member.user.tag}**  userID: ${member.id}
+		/${row.commandName}
+		${row.datetime} ${timezoneText}
+	`;
+
+	return chText;
+}
 
 async function addCommandInstance(interaction) {
 	// get command name, with subcommand
