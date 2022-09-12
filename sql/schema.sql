@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS commandHistory
 	FOREIGN KEY (userId) REFERENCES users (id)
 );
 
+CREATE INDEX IF NOT EXISTS IX_commandHistory_guildId ON commandHistory (guildId);
+
 -- /manageperms
 CREATE TABLE IF NOT EXISTS requiredRoles
 (
