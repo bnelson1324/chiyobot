@@ -8,6 +8,7 @@ const { open } = require('sqlite');
 const perms = require('./commands/manageperms');
 const commandHistory = require('./commands/commandhistory');
 const resourceManager = require('./res/resourceManager');
+const insertOrIgnoreMember = require('./sql/utils').insertOrIgnoreMember;
 
 (async () => {
 	// set up database
@@ -57,20 +58,22 @@ const resourceManager = require('./res/resourceManager');
 		try {
 			const inGuild = interaction.guild != null;
 			if (!inGuild || (inGuild && command.allowedInGuilds)) {
+				// add command user to database
+				await insertOrIgnoreMember(interaction.client.db, interaction.guildId, interaction.user.id);
+
+				// execute command
 				await command.execute(interaction);
+
+				// log command in commandHistory
+				await commandHistory.addCommandInstance(interaction);
 			} else {
 				await interaction.reply('Must use this command in DMs');
 			}
 		} catch (error) {
 			console.error(error);
-			await interaction.reply({ content: 'There was an error executing this command', ephermal: true });
-		}
-		return; // temp
-		// add command to commandHistory
-		try {
-			await commandHistory.addCommandInstance(interaction);
-		} catch (error) {
-			console.error(error);
+			if (!interaction.replied) {
+				await interaction.reply({ content: 'There was an error executing this command', ephermal: true });
+			}
 		}
 	});
 

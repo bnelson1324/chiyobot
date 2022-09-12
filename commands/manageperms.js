@@ -44,7 +44,7 @@ module.exports = {
 					return;
 				}
 				const db = interaction.client.db;
-				let replyText = target.member.displayName;
+				let replyText = target.user.tag;
 				if (interaction.options.get('block').value) {
 					await insertOrIgnoreMember(db, interaction.guildId, target.value);
 					await db.run(
@@ -116,7 +116,6 @@ async function updateOrInsertRole(interaction, role) {
 		`, interaction.guildId,
 	) != undefined;
 	if (!roleExists) {
-		await insertOrIgnoreMember(db, interaction.guildId, interaction.user.id);
 		await db.run(`
 			INSERT OR IGNORE INTO requiredRoles (guild, requiredRole)
 			VALUES (?, ?);
