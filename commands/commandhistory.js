@@ -6,12 +6,19 @@ module.exports = {
 		.setDescription('See history of all commands used in the guild')
 		.setDMPermission(false)
 		.addIntegerOption(option =>
+			option.setName('commandcount')
+				.setDescription('Number of commands back to display')
+				.setMinValue(1)
+				.setRequired(true))
+		.addIntegerOption(option =>
 			option.setName('timezone')
 				.setDescription('Offset from UTC timezone')
 				.setMinValue(-12)
 				.setMaxValue(14)
 				.setRequired(false)),
 	async execute(interaction) {
+		await interaction.deferReply();
+
 		// get command history
 		let timezoneOffset = interaction.options.get('timezone')?.value;
 		if (!timezoneOffset) {
@@ -37,29 +44,74 @@ module.exports = {
 			timezoneText += `${timezoneOffset}`;
 		}
 		// format reply
-		let historyText = interaction.guild.name + '\n\n';
+		const historyMessages = [];
+		let currCommandCount = 0;
+		let lastCommandUserId;
+		let historyText = `Command history in guild: **${interaction.guild.name}**\n\n`;
 		for (const row of commandHistory) {
-			historyText += await formatCommandHistoryRow(row, interaction.client, timezoneText) + '\n';
+			// break if reaching over max command count
+			if (currCommandCount >= interaction.options.get('commandcount').value) {
+				break;
+			}
+
+			// split messages that go over the size limit
+			const addStr = await formatCommandHistoryRow(row, interaction.client, timezoneText, lastCommandUserId);
+			if (historyText.length + addStr.length >= 2000) {
+				historyMessages.push(historyText);
+				historyText = '';
+
+				// add userText if addStr starts w/ a tab (which means it is a command)
+				if (addStr.charAt(0) === '\t') {
+					historyText += await formatUserText(row, interaction.client);
+				}
+			}
+
+			// add addStr
+			historyText += addStr;
+			currCommandCount++;
+			lastCommandUserId = row.userId;
+		}
+		if (historyText.length > 0) {
+			historyMessages.push(historyText);
 		}
 
 		// send command history in DMs
-		await interaction.user.send(`Command history in guild: ${historyText}`);
-		await interaction.reply('Command history sent');
+		for (const msg of historyMessages) {
+			await interaction.user.send(msg);
+		}
+
+		await interaction.editReply(`Sent command history: last ${currCommandCount} commands used`);
 	},
 	allowedInGuilds: true,
 	addCommandInstance,
 };
 
-async function formatCommandHistoryRow(row, client, timezoneText) {
+async function formatCommandHistoryRow(row, client, timezoneText, lastCommandUserId) {
 	const guild = await client.guilds.fetch(row.guildId);
 	const member = await guild.members.fetch(row.userId);
-	const chText =
-	`**${member.user.tag}**  userID: ${member.id}
-		/${row.commandName}
-		${row.datetime} ${timezoneText}
-	`;
+	// if the same user uses more than 1 command in a row, display their name only once
+	let chText = '';
+	if (lastCommandUserId !== member.id) {
+		chText += await formatUserText(row, client);
+	}
+
+	// get command suboptions as string
+	let suboptStr = '';
+	for (const [paramName, paramVal] of Object.entries(JSON.parse(row.commandParameters))) {
+		suboptStr += `${paramName}: ${paramVal}, `;
+	}
+
+	// display command, params, and time
+	chText += `\t\t**/${row.commandName}**\t${suboptStr}\n`;
+	chText += `\t\t\t\t${row.datetime} ${timezoneText}\n`;
 
 	return chText;
+}
+
+async function formatUserText(row, client) {
+	const guild = await client.guilds.fetch(row.guildId);
+	const member = await guild.members.fetch(row.userId);
+	return `**${member.user.tag}**  userID: ${member.id}\n`;
 }
 
 async function addCommandInstance(interaction) {

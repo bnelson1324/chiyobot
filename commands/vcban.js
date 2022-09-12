@@ -34,7 +34,7 @@ module.exports = {
 	},
 	async execute(interaction) {
 		const target = interaction.options.get('target');
-		let replyText = target.member.displayName;
+		let replyText = target.user.tag;
 		if (interaction.options.get('ban').value) {
 			await insertOrIgnoreMember(interaction.client.db, interaction.guildId, target.value);
 			await interaction.client.db.run(
