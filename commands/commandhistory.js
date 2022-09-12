@@ -15,6 +15,10 @@ module.exports = {
 				.setDescription('Offset from UTC timezone')
 				.setMinValue(-12)
 				.setMaxValue(14)
+				.setRequired(false))
+		.addBooleanOption(option =>
+			option.setName('showid')
+				.setDescription('Whether or not the response should show the IDs of users and roles')
 				.setRequired(false)),
 	async execute(interaction) {
 		await interaction.deferReply();
@@ -55,14 +59,14 @@ module.exports = {
 			}
 
 			// split messages that go over the size limit
-			const addStr = await formatCommandHistoryRow(row, interaction.client, timezoneText, lastCommandUserId);
+			const addStr = await formatCommandHistoryRow(row, interaction.client, timezoneText, lastCommandUserId, interaction.options.get('showid')?.value);
 			if (historyText.length + addStr.length >= 2000) {
 				historyMessages.push(historyText);
 				historyText = '';
 
 				// add userText if addStr starts w/ a tab (which means it is a command)
 				if (addStr.charAt(0) === '\t') {
-					historyText += `${await formatResource(interaction.client, row.guildId, 'USER', row.userId)}\n`;
+					historyText += `${await formatResource(interaction.client, row.guildId, 'USER', row.userId, interaction.options.get('showid')?.value)}\n`;
 				}
 			}
 
@@ -87,19 +91,19 @@ module.exports = {
 };
 
 /* text formatting */
-async function formatCommandHistoryRow(row, client, timezoneText, lastCommandUserId) {
+async function formatCommandHistoryRow(row, client, timezoneText, lastCommandUserId, showid) {
 	const guild = await client.guilds.fetch(row.guildId);
 	const member = await guild.members.fetch(row.userId);
 	// if the same user uses more than 1 command in a row, display their name only once
 	let chText = '';
 	if (lastCommandUserId !== member.id) {
-		chText += `${await formatResource(client, row.guildId, 'USER', row.userId)}\n`;
+		chText += `${await formatResource(client, row.guildId, 'USER', row.userId, showid)}\n`;
 	}
 
 	// get command suboptions as string
 	let suboptStr = '';
 	for (const [paramName, paramData] of Object.entries(JSON.parse(row.commandParameters))) {
-		suboptStr += `${paramName}: ${await formatResource(client, row.guildId, paramData.type, paramData.value)}, `;
+		suboptStr += `${paramName}: ${await formatResource(client, row.guildId, paramData.type, paramData.value, showid)}, `;
 	}
 
 	// display command, params, and time
@@ -110,16 +114,24 @@ async function formatCommandHistoryRow(row, client, timezoneText, lastCommandUse
 }
 
 // return a string to represent a resource in a guild
-async function formatResource(client, guildId, type, value) {
+async function formatResource(client, guildId, type, value, showId) {
 	const guild = await client.guilds.fetch(guildId);
 	switch (type) {
 		case 'USER': {
 			const member = await guild.members.fetch(value);
-			return `**${member.user.tag}** (ID: ${member.id})`;
+			let str = `**${member.user.tag}**`;
+			if (showId) {
+				str += ` (ID: ${member.id})`;
+			}
+			return str;
 		}
 		case 'ROLE': {
 			const role = await guild.roles.fetch(value);
-			return `${role.name} (ID: ${role.id})`;
+			let str = `${role.name}`;
+			if (showId) {
+				str += ` (ID: ${role.id})`;
+			}
+			return str;
 		}
 		default: {
 			return value;
