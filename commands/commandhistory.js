@@ -62,7 +62,7 @@ module.exports = {
 
 				// add userText if addStr starts w/ a tab (which means it is a command)
 				if (addStr.charAt(0) === '\t') {
-					historyText += await formatUserText(row, interaction.client);
+					historyText += `${await formatResource(interaction.client, row.guildId, 'USER', row.userId)}\n`;
 				}
 			}
 
@@ -86,19 +86,20 @@ module.exports = {
 	addCommandInstance,
 };
 
+/* text formatting */
 async function formatCommandHistoryRow(row, client, timezoneText, lastCommandUserId) {
 	const guild = await client.guilds.fetch(row.guildId);
 	const member = await guild.members.fetch(row.userId);
 	// if the same user uses more than 1 command in a row, display their name only once
 	let chText = '';
 	if (lastCommandUserId !== member.id) {
-		chText += await formatUserText(row, client);
+		chText += `${await formatResource(client, row.guildId, 'USER', row.userId)}\n`;
 	}
 
 	// get command suboptions as string
 	let suboptStr = '';
-	for (const [paramName, paramVal] of Object.entries(JSON.parse(row.commandParameters))) {
-		suboptStr += `${paramName}: ${paramVal}, `;
+	for (const [paramName, paramData] of Object.entries(JSON.parse(row.commandParameters))) {
+		suboptStr += `${paramName}: ${await formatResource(client, row.guildId, paramData.type, paramData.value)}, `;
 	}
 
 	// display command, params, and time
@@ -108,12 +109,26 @@ async function formatCommandHistoryRow(row, client, timezoneText, lastCommandUse
 	return chText;
 }
 
-async function formatUserText(row, client) {
-	const guild = await client.guilds.fetch(row.guildId);
-	const member = await guild.members.fetch(row.userId);
-	return `**${member.user.tag}**  userID: ${member.id}\n`;
+// return a string to represent a resource in a guild
+async function formatResource(client, guildId, type, value) {
+	const guild = await client.guilds.fetch(guildId);
+	switch (type) {
+		case 'USER': {
+			const member = await guild.members.fetch(value);
+			return `**${member.user.tag}** (ID: ${member.id})`;
+		}
+		case 'ROLE': {
+			const role = await guild.roles.fetch(value);
+			return `${role.name} (ID: ${role.id})`;
+		}
+		default: {
+			return value;
+		}
+	}
 }
 
+/* misc */
+// add the use of a command to commandHistory in the db
 async function addCommandInstance(interaction) {
 	// get command name, with subcommand
 	let commandName = interaction.commandName;
@@ -125,7 +140,10 @@ async function addCommandInstance(interaction) {
 	// get parameters of command
 	const commandOptions = {};
 	for (const opt of interaction.options._hoistedOptions) {
-		commandOptions[opt.name] = opt.value;
+		commandOptions[opt.name] = {
+			type: opt.type,
+			value: opt.value,
+		};
 	}
 
 	// insert into db
