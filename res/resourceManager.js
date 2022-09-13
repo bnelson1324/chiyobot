@@ -6,7 +6,7 @@ let speechBubbles;
 try {
 	speechBubbles = fs.readdirSync('res/speechBubbles').map(file => path.join('res/speechBubbles', file));
 } catch (err) {
-	if (err.errno == -4058) {
+	if (err.code == 'ENOENT') {
 		console.log('Could not find speech bubbles directory');
 	} else {
 		console.error(err);
