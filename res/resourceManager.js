@@ -4,7 +4,8 @@ const path = require('node:path');
 // get file paths from speechBubbles folder
 let speechBubbles;
 try {
-	speechBubbles = fs.readdirSync('res/speechBubbles').map(file => path.join('res/speechBubbles', file));
+	const speechBubblesDir = path.join(__dirname, 'speechBubbles');
+	speechBubbles = fs.readdirSync(speechBubblesDir).map(file => path.join(speechBubblesDir, file));
 } catch (err) {
 	if (err.code == 'ENOENT') {
 		console.log('Could not find speech bubbles directory');
@@ -20,7 +21,7 @@ module.exports = {
 };
 
 function getPenguinImage() {
-	return 'res/penguin.png';
+	return path.join(__dirname, 'penguin.png');
 }
 
 // return a random speech bubble image, or if there are none, return penguin image

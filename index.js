@@ -13,10 +13,10 @@ const insertOrIgnoreMember = require('./sql/utils').insertOrIgnoreMember;
 (async () => {
 	// set up database
 	client.db = await open({
-		filename: 'database.sqlite',
+		filename: path.join(__dirname, 'database.sqlite'),
 		driver: sqlite3.Database,
 	});
-	const schema = fs.readFileSync('sql/schema.sql', 'utf8');
+	const schema = fs.readFileSync(path.join(__dirname, 'sql/schema.sql'), 'utf8');
 	await client.db.exec(schema);
 	console.log('Database loaded');
 
