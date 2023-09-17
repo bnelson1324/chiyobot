@@ -1,5 +1,5 @@
-const fs = require('node:fs');
-const path = require('node:path');
+const fs = require('fs');
+const path = require('path');
 const { Client, Intents } = require('discord.js');
 const { token } = require('./config.json');
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES] });

@@ -50,3 +50,13 @@ CREATE TABLE IF NOT EXISTS vcbans
 	FOREIGN KEY (guild) REFERENCES guilds (id),
 	FOREIGN KEY (user) REFERENCES users (id)
 );
+
+-- /curse
+CREATE TABLE IF NOT EXISTS curses
+(
+	guild TEXT NOT NULL,
+	user TEXT NOT NULL,
+	PRIMARY KEY (guild, user),
+	FOREIGN KEY (guild) REFERENCES guilds (id),
+	FOREIGN KEY (user) REFERENCES users (id)
+);
