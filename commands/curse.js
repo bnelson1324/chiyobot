@@ -58,7 +58,7 @@ async function disconnectAfterDelay(member) {
 	const timeout = Math.random() * 400;
 	setTimeout(
 		() => {
-			if (member) {
+			if (member && member.voice) {
 				member.voice.disconnect();
 			}
 		},
