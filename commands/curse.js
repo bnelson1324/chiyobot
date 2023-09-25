@@ -18,13 +18,7 @@ module.exports = {
 	async setup(client) {
 		// set up voice channel event
 		client.on('voiceStateUpdate', async (oldState, newState) => {
-			const member = await newState.client.db.get(`
-				SELECT guild
-				FROM curses
-				WHERE guild = ? AND user = ?;
-				`, newState.guild.id, newState.id,
-			);
-			disconnectAfterDelay(member)
+			disconnectAfterDelay(newState.client, newState.guild.id, newState.id)
 		});
 	},
 	async execute(interaction) {
@@ -38,7 +32,7 @@ module.exports = {
 			);
 
 			// disconnect user from their current voice channel
-			await disconnectAfterDelay(target.member)
+			await disconnectAfterDelay(interaction.client, target.member.guild.id, target.member.id)
 			replyText += ' has been cursed';
 		} else {
 			await interaction.client.db.run(`
@@ -53,11 +47,22 @@ module.exports = {
 	allowedInGuilds: true,
 };
 
-async function disconnectAfterDelay(member) {
+async function disconnectAfterDelay(client, guildId, memberId) {
 	// kick the user in a random amount of time
 	const timeout = Math.random() * 400;
 	setTimeout(
-		() => {
+		async () => {
+			const isCursed = await client.db.get(`
+				SELECT guild
+				FROM curses
+				WHERE guild = ? AND user = ?;
+			`, guildId, memberId,
+			);
+			if(!isCursed)
+				return;
+
+			const guild = await client.guilds.fetch(guildId);
+			const member = await guild?.members.fetch(memberId);
 			if (member && member.voice) {
 				member.voice.disconnect();
 			}
